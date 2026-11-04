@@ -28,6 +28,11 @@ Snel naslagwerk voor de OOP-toets. Gebruik `Ctrl+F` om een begrip te zoeken.
 23. [Design patterns](#23-design-patterns)
 24. [Veelgemaakte fouten](#24-veelgemaakte-fouten)
 25. [Output-vragen: stappenplan](#25-output-vragen-stappenplan)
+26. [Basis-syntax: types, if, loops, arrays, List, strings](#26-basis-syntax-types-if-loops-arrays-list-strings)
+27. [Handige extra's: Dictionary, null, lambdas, LINQ, enum, SOLID](#27-handige-extras-dictionary-null-lambdas-linq-enum-solid)
+28. [UML-klassendiagram](#28-uml-klassendiagram)
+29. [Singleton, IReadOnlyList, ReferenceEquals](#29-singleton-ireadonlylist-referenceequals)
+30. [Stappenplan casus-toets](#30-stappenplan-casus-toets)
 
 ---
 
@@ -766,7 +771,7 @@ if (int.TryParse(invoer, out int getal)) { ... } else { Console.WriteLine("Geen 
 
 | Soort | Gaat over | Patterns |
 |---|---|---|
-| **Creational** | hoe objecten **gemaakt** worden | **Factory**, Singleton, Builder |
+| **Creational** | hoe objecten **gemaakt** worden | **Factory**, **Singleton** (zie §29), Builder |
 | **Structural** | hoe classes/objecten **samengesteld** worden | **Adapter**, Decorator, Facade |
 | **Behavioral** | hoe objecten **communiceren** / verantwoordelijkheid verdelen | **Strategy**, **Observer**, Command |
 
@@ -899,3 +904,683 @@ IPrinter p = new PrinterAdapter(new OudePrinter());
 7. **Overloading:** tel argumenten + kijk naar types → beste match. Binnen-naar-buiten bij geneste aanroepen.
 8. **Integer-deling:** `int / int` = afgerond naar beneden (richting 0).
 9. **Observer:** observers in volgorde van aanmelden; na afmelden geen melding meer.
+
+---
+
+## 26. Basis-syntax: types, if, loops, arrays, List, strings
+
+### Types
+
+| Type | Voorbeeld | Let op |
+|---|---|---|
+| `int` | `int n = 5;` | heel getal; `7 / 2` = `3` |
+| `double` | `double d = 2.5;` | kommagetal (punt in code!) |
+| `decimal` | `decimal prijs = 9.99m;` | voor geld; **`m`** achter het getal verplicht |
+| `bool` | `bool aan = true;` | `true` / `false` |
+| `char` | `char c = 'a';` | één teken, **enkele** quotes |
+| `string` | `string s = "hoi";` | tekst, **dubbele** quotes |
+| `var` | `var x = 5;` | C# bepaalt zelf het type (hier `int`) |
+
+Standaardwaarden van fields: `int`/`double`/`decimal` → `0`, `bool` → `false`, `string`/objecten → `null`.
+
+### Omzetten (conversie)
+
+```csharp
+int n = int.Parse("42");                 // FormatException bij "abc"
+bool ok = int.TryParse("abc", out int m); // ok = false, m = 0, GEEN exception
+double d = double.Parse("2,5");          // let op: NL-instellingen gebruiken komma
+string s = n.ToString();                 // getal → tekst
+double x = (double)7 / 2;                // 3.5  (expliciete cast)
+int y = (int)3.9;                        // 3    (afkappen, niet afronden!)
+int z = Convert.ToInt32("12");           // 12
+```
+
+Impliciet (automatisch) mag van klein naar groot: `int` → `double`. Andersom moet een cast: `(int)2.7`.
+
+### Operators
+
+| Operator | Betekenis | Voorbeeld |
+|---|---|---|
+| `+ - * /` | rekenen | `7 / 2` = 3 (int), `7.0 / 2` = 3.5 |
+| `%` | rest (modulo) | `7 % 2` = 1 → even getal: `n % 2 == 0` |
+| `++` / `--` | +1 / -1 | `i++` |
+| `+=` `-=` `*=` | verkort | `som += x` = `som = som + x` |
+| `==` `!=` | gelijk / niet gelijk | `a == b` (niet `=`!) |
+| `< > <= >=` | vergelijken | |
+| `&&` | EN | `a > 0 && a < 10` |
+| `\|\|` | OF | `a < 0 \|\| a > 10` |
+| `!` | NIET / omdraaien | `Aan = !Aan;` |
+
+### Keuzes
+
+```csharp
+// if / else if / else
+if (cijfer >= 8)       Console.WriteLine("Goed");
+else if (cijfer >= 5.5) Console.WriteLine("Voldoende");
+else                   Console.WriteLine("Onvoldoende");
+
+// ternary (verkorte if): voorwaarde ? alsWaar : alsNietWaar
+string status = cijfer >= 5.5 ? "Gehaald" : "Niet gehaald";
+
+// switch statement
+switch (dag)
+{
+    case "za":
+    case "zo":
+        Console.WriteLine("Weekend");
+        break;                 // break verplicht!
+    default:
+        Console.WriteLine("Werkdag");
+        break;
+}
+
+// switch expression (C# 8+): geeft een waarde terug
+decimal korting = klantType switch
+{
+    "student" => 0.20m,
+    "senior"  => 0.10m,
+    _         => 0m          // _ = alle andere gevallen (default)
+};
+```
+
+### Loops
+
+```csharp
+// for: als je een teller/index nodig hebt
+for (int i = 0; i < 5; i++)          // i = 0,1,2,3,4 (5 rondes)
+    Console.Write(i + " ");
+
+for (int i = arr.Length - 1; i >= 0; i--)   // achteruit
+    Console.Write(arr[i]);
+
+// foreach: elk element langs, geen index nodig
+foreach (string naam in namen)
+    Console.WriteLine(naam);
+// LET OP: in foreach mag je de lijst NIET aanpassen (Add/Remove) → InvalidOperationException
+
+// while: zolang voorwaarde waar is (kan 0 keer draaien)
+int poging = 0;
+while (poging < 3)
+{
+    poging++;
+}
+
+// do-while: draait MINSTENS 1 keer
+do
+{
+    Console.Write("Getal: ");
+} while (!int.TryParse(Console.ReadLine(), out int getal));
+
+// break = loop direct stoppen, continue = naar volgende ronde
+for (int i = 0; i < 10; i++)
+{
+    if (i == 2) continue;   // sla 2 over
+    if (i == 5) break;      // stop bij 5
+    Console.Write(i);       // 0134
+}
+```
+
+| Loop | Gebruik |
+|---|---|
+| `for` | vast aantal keer, of je hebt de index nodig |
+| `foreach` | alle elementen van array/List langs |
+| `while` | onbekend aantal keer, check vooraf |
+| `do-while` | minstens één keer (bijv. invoer vragen) |
+
+`for (int i = 0; i < 100; i++)` → **100** rondes (0 t/m 99). `i <= 100` → 101 rondes.
+
+### Array vs List
+
+```csharp
+int[] arr = new int[3];          // vaste grootte 3, gevuld met 0
+int[] arr2 = { 4, 7, 1 };
+arr2[0] = 9;                     // aanpassen
+int n = arr2.Length;             // 3
+
+List<string> lijst = new() { "a", "b" };
+lijst.Add("c");                  // toevoegen
+lijst.Remove("a");               // verwijderen op waarde
+lijst.RemoveAt(0);               // verwijderen op index
+lijst.Insert(0, "z");            // invoegen op index
+bool zit = lijst.Contains("c");  // zoeken
+int idx = lijst.IndexOf("c");    // -1 als niet gevonden
+int aantal = lijst.Count;
+lijst.Clear();                   // alles weg
+```
+
+| | Array | List |
+|---|---|---|
+| Grootte | vast | groeit/krimpt |
+| Aantal | **`.Length`** | **`.Count`** |
+| Toevoegen/verwijderen | nee | `Add`, `Remove`, `RemoveAt`, `Insert` |
+| Buiten bereik | `IndexOutOfRangeException` | `ArgumentOutOfRangeException` |
+
+Index begint bij **0**, laatste element = `Length - 1` / `Count - 1`.
+
+### Strings
+
+```csharp
+string naam = "Evie";
+int leeftijd = 20;
+
+string a = "Hoi " + naam;                         // samenvoegen
+string b = $"{naam} is {leeftijd} jaar";          // interpolatie (let op de $)
+string c = $"{naam,-10}|";                        // links uitlijnen op 10 tekens
+
+naam.Length          // 4
+naam.ToUpper()       // "EVIE"
+naam.ToLower()       // "evie"
+naam.Contains("vi")  // true
+naam.StartsWith("E") // true
+naam.Substring(1, 2) // "vi"  (vanaf index 1, 2 tekens)
+naam.Replace("e", "a") // "Evia"
+" hoi ".Trim()       // "hoi"
+"a,b,c".Split(',')   // string[] { "a", "b", "c" }
+string.IsNullOrEmpty(s)
+string.Join(", ", lijst)  // "a, b, c"
+```
+
+### Formatteren (in `$"{...}"` of `.ToString("...")`)
+
+| Format | Voorbeeld | Resultaat |
+|---|---|---|
+| `:00` | `$"{8:00}"` | `08` |
+| `:F2` | `$"{3.14159:F2}"` | `3,14` (2 decimalen) |
+| `:C` | `$"{9.5m:C}"` | `€ 9,50` (valuta) |
+| `:N0` | `$"{1234567:N0}"` | `1.234.567` |
+| `:P0` | `$"{0.25:P0}"` | `25%` |
+| `{Uren:00}:{Minuten:00}` | | `08:05` |
+
+### Console
+
+```csharp
+Console.WriteLine("tekst");   // met nieuwe regel
+Console.Write("tekst");       // zonder nieuwe regel
+string? invoer = Console.ReadLine();   // lezen van gebruiker (kan null zijn)
+```
+
+---
+
+## 27. Handige extra's: Dictionary, null, lambdas, LINQ, enum, SOLID
+
+### Dictionary<TKey, TValue>
+
+Sleutel → waarde (zoals een woordenboek). Elke sleutel is uniek.
+
+```csharp
+var prijzen = new Dictionary<string, decimal>();
+prijzen["appel"] = 0.50m;          // toevoegen of overschrijven
+prijzen.Add("peer", 0.75m);        // toevoegen (ArgumentException als sleutel al bestaat)
+
+decimal p = prijzen["appel"];      // ophalen (KeyNotFoundException als sleutel niet bestaat)
+if (prijzen.TryGetValue("kiwi", out decimal k)) { ... }   // veilig ophalen
+bool bestaat = prijzen.ContainsKey("peer");
+prijzen.Remove("peer");
+int aantal = prijzen.Count;
+
+foreach (var paar in prijzen)
+    Console.WriteLine($"{paar.Key}: {paar.Value}");
+```
+
+### Null-tricks
+
+```csharp
+string? naam = null;         // ? = mag null zijn (nullable)
+int? getal = null;           // ook voor value types
+
+int? lengte = naam?.Length;              // ?.  → null als naam null is (geen exception)
+string toon = naam ?? "Onbekend";        // ??  → standaardwaarde als links null is
+naam ??= "Leeg";                         // ??= → alleen toewijzen als het null is
+Geklikt?.Invoke(waarde);                 // event alleen aanroepen als er observers zijn
+
+if (naam is null) { ... }                // null-check
+ArgumentNullException.ThrowIfNull(klant);   // gooit exception als klant null is
+```
+
+### this en nameof
+
+```csharp
+public Persoon(string naam)
+{
+    this.naam = naam;    // this = het huidige object (field) vs de parameter
+}
+throw new ArgumentOutOfRangeException(nameof(bedrag));   // nameof(bedrag) → "bedrag"
+```
+
+### Object initializer
+
+```csharp
+var p = new Punt { X = 1, Y = 2 };   // properties/fields direct zetten na de constructor
+var lijst = new List<int> { 1, 2, 3 };
+```
+
+### Expression-bodied members (`=>` in een class)
+
+```csharp
+public int Dubbel(int x) => x * 2;              // = { return x * 2; }
+public bool IsVolwassen => Leeftijd >= 18;      // read-only property
+public void Schakel() => Aan = !Aan;            // void-methode op één regel
+```
+
+### Lambdas, Action, Func
+
+Een **lambda** is een kleine naamloze functie: `parameters => resultaat`.
+
+```csharp
+Func<int, int> kwadraat = x => x * x;          // Func<in, out>: geeft iets terug
+Console.WriteLine(kwadraat(4));                 // 16
+
+Func<int, int, int> optellen = (a, b) => a + b;
+Action<string> print = s => Console.WriteLine(s);   // Action: geeft NIETS terug (void)
+print("hoi");
+
+Predicate<int> isEven = n => n % 2 == 0;        // geeft bool terug
+```
+
+| Type | Return | Voorbeeld |
+|---|---|---|
+| `Action` / `Action<T>` | void | `Action<string> log = s => Console.WriteLine(s);` |
+| `Func<T, TResult>` | laatste type-parameter | `Func<int, bool> pos = x => x > 0;` |
+
+### Basis-LINQ (`using System.Linq;`)
+
+```csharp
+var getallen = new List<int> { 5, 2, 8, 1, 9 };
+
+getallen.Sum()                       // 25
+getallen.Average()                   // 5
+getallen.Max() / .Min()              // 9 / 1
+getallen.Count(x => x > 4)           // 3
+getallen.Where(x => x > 4)           // { 5, 8, 9 }   filteren
+getallen.Select(x => x * 2)          // { 10, 4, 16, 2, 18 }   omzetten
+getallen.OrderBy(x => x)             // { 1, 2, 5, 8, 9 }   sorteren
+getallen.OrderByDescending(x => x)
+getallen.First() / .FirstOrDefault(x => x > 100)   // 5 / 0 (default als niks gevonden)
+getallen.Any(x => x > 8)             // true
+getallen.All(x => x > 0)             // true
+getallen.Where(x => x > 4).ToList()  // resultaat weer als List
+
+// Met objecten + polymorfisme:
+decimal totaal = medewerkers.Sum(m => m.MaandSalaris());
+var freelancers = medewerkers.OfType<Freelancer>().ToList();   // alleen dat type
+```
+
+### Enum
+
+Vaste set benoemde waarden.
+
+```csharp
+public enum FietsStatus { Beschikbaar, Verhuurd, InReparatie }
+
+public class Fiets
+{
+    public FietsStatus Status { get; set; } = FietsStatus.Beschikbaar;
+}
+
+if (fiets.Status == FietsStatus.Verhuurd)
+    throw new InvalidOperationException("Fiets is al verhuurd");
+
+Console.WriteLine(FietsStatus.Verhuurd);        // "Verhuurd"
+int nummer = (int)FietsStatus.Verhuurd;         // 1 (begint bij 0)
+```
+
+### File (bestanden)
+
+```csharp
+File.WriteAllText("data.txt", "inhoud");        // schrijven (overschrijft)
+File.AppendAllText("log.txt", "regel\n");       // toevoegen
+string tekst = File.ReadAllText("data.txt");    // FileNotFoundException als het niet bestaat
+string[] regels = File.ReadAllLines("data.txt");
+bool er = File.Exists("data.txt");
+```
+
+### struct vs class
+
+| | `class` | `struct` |
+|---|---|---|
+| Soort | reference type | value type |
+| `b = a` | zelfde object | **kopie** |
+| Inheritance | ja | nee |
+| Gebruik | bijna altijd | kleine data (bijv. `Punt`, `DateTime`) |
+
+### SOLID (alle vijf)
+
+| Letter | Principe | In één zin | Zie |
+|---|---|---|---|
+| **S** | Single Responsibility | Een class heeft één verantwoordelijkheid / één reden om te veranderen | §8 |
+| **O** | Open/Closed | Open voor uitbreiding, gesloten voor wijziging (nieuwe subclass i.p.v. if-ketens aanpassen) | §15 |
+| **L** | Liskov Substitution | Een subclass moet overal kunnen worden gebruikt waar de base class verwacht wordt, zonder dat het programma breekt | §9 |
+| **I** | Interface Segregation | Liever meerdere kleine interfaces dan één grote; een class hoeft geen methodes te implementeren die hij niet nodig heeft | §17 |
+| **D** | Dependency Inversion | Afhankelijk van abstracties (interfaces), niet van concrete classes | §19 |
+
+Voorbeeld **L**-schending: `Pinguin : Vogel` waarbij `Vliegen()` een exception gooit → code die met `Vogel` werkt breekt.
+Voorbeeld **I**-schending: `IPrinter` met `Print()`, `Scan()`, `Fax()` → simpele printer moet `Scan()`/`Fax()` leeg of met exception implementeren. Beter: `IPrint`, `IScan`, `IFax`.
+
+---
+
+## 28. UML-klassendiagram
+
+### Eén klasse = een doos met 3 vakken
+
+```
+┌───────────────────────────────────────────┐
+│              «abstract»                   │  ← stereotype (optioneel)
+│                Media                      │  ← 1. NAAM (cursief = abstract)
+├───────────────────────────────────────────┤
+│ + Titel: string {get}                     │  ← 2. ATTRIBUTEN / PROPERTIES
+│ + IsUitgeleend: bool {get; set}           │
+│ - _code: string                           │
+├───────────────────────────────────────────┤
+│ # Media(titel: string)                    │  ← 3. METHODES (+ constructors)
+│ + BerekenBoete(dagen: int): decimal       │     (cursief = abstract)
+│ + ToString(): string                      │
+└───────────────────────────────────────────┘
+```
+
+### Notatie
+
+| UML | C# |
+|---|---|
+| `+` | `public` |
+| `-` | `private` |
+| `#` | `protected` |
+| `~` | `internal` |
+| `naam: type` | `type naam` (in UML staat het type **achter** de naam) |
+| `Methode(p: int): decimal` | `decimal Methode(int p)` |
+| `Methode(): void` | `void Methode()` |
+| `{get}` / `{get; set}` | property met alleen get / get en set |
+| *cursief* of `{abstract}` | abstract klasse / abstracte methode |
+| <u>onderstreept</u> | `static` |
+| `«interface»` boven de naam | interface |
+| `«abstract»` boven de naam | abstracte klasse |
+| `List<Voertuig>` | generic type mag gewoon zo |
+
+**Regel:** zet een methode in een subklasse alleen opnieuw neer als die subklasse hem **overridet** (of implementeert). Geërfde methodes/properties herhaal je niet.
+
+### Relaties (pijlen)
+
+| Relatie | Lijn | Pijlpunt | C# | Wanneer |
+|---|---|---|---|---|
+| **Overerving** (generalisatie) | doorgetrokken ─── | open driehoek ▷ naar **parent** | `class Fiets : Voertuig` | is-a |
+| **Implementatie** (realisatie) | **gestippeld** - - - | open driehoek ▷ naar **interface** | `class Scooter : IOplaadbaar` | kan-iets |
+| **Associatie** | doorgetrokken ─── | open pijl → | field/property van ander type | heeft-een / kent |
+| **Aggregatie** | doorgetrokken | open ruit ◇ bij het **geheel** | lijst met losse objecten | geheel–deel, deel kan los bestaan |
+| **Compositie** | doorgetrokken | dichte ruit ◆ bij het **geheel** | geheel maakt en bezit de delen | deel bestaat niet zonder geheel |
+| **Afhankelijkheid** (dependency) | **gestippeld** - - - | open pijl → | gebruikt/gooit/maakt het type | bijv. `«throws»`, `«uses»`, `«create»` |
+
+**Multipliciteit** (bij associatie, aan de kant van het doel): `1` = precies één, `0..1` = nul of één, `0..*` of `*` = nul of meer, `1..*` = minstens één.
+
+```
+          ┌──────────────┐            ┌────────────┐
+          │ Bibliotheek  │──────────▶│   Media    │   associatie, 0..*
+          └──────────────┘    0..*    └────────────┘
+                 │                          △
+                 │ «uses»                   │  overerving (dicht lijn, open driehoek)
+                 ▼ (gestippeld)       ┌─────┴─────┐
+          ┌──────────────┐            │   Boek    │- - - - -▷ «interface» IReserveerbaar
+          │  «interface» │            └───────────┘          implementatie (gestippeld)
+          │   ILogger    │
+          └──────────────┘
+                 △
+                 ┊  (gestippeld = implementeert)
+          ┌──────────────┐
+          │ConsoleLogger │
+          └──────────────┘
+```
+
+### Zelfde voorbeeld in Mermaid (GitHub tekent dit als diagram)
+
+```mermaid
+classDiagram
+    class Media {
+        <<abstract>>
+        +string Titel
+        +bool IsUitgeleend
+        #Media(string titel)
+        +BerekenBoete(int dagen)* decimal
+        +ToString() string
+    }
+    class Boek {
+        +string Auteur
+        +Boek(string titel, string auteur)
+        +BerekenBoete(int dagen) decimal
+        +ToString() string
+    }
+    class IReserveerbaar {
+        <<interface>>
+        +Reserveer() void
+    }
+    class Bibliotheek {
+        -List~Media~ _media
+        +IReadOnlyList~Media~ Media
+        +ILogger Logger
+        -Bibliotheek()
+        +Instance$ Bibliotheek
+        +VoegToe(Media m) void
+    }
+    class ILogger {
+        <<interface>>
+        +Info(string melding) void
+        +Fout(string melding) void
+    }
+    class ConsoleLogger
+    class MediaNietBeschikbaarException {
+        +string MediaId
+    }
+
+    Media <|-- Boek : erft van
+    IReserveerbaar <|.. Boek : implementeert
+    Bibliotheek --> "0..*" Media
+    Bibliotheek --> ILogger
+    ILogger <|.. ConsoleLogger
+    Exception <|-- MediaNietBeschikbaarException
+    Bibliotheek ..> MediaNietBeschikbaarException : «throws»
+```
+
+(Mermaid: `*` achter een methode = abstract, `$` = static.)
+
+### Van casus naar UML: tips
+
+- **Zelfstandige naamwoorden** in de casus → klassen of properties. **Werkwoorden** → methodes.
+- Iets dat **elk type anders doet** → abstracte methode in de basisklasse + override in elke subklasse.
+- Iets dat **sommige** klassen kunnen (opladen, reserveren) → interface.
+- **Dezelfde code in twee subklassen?** → extra abstracte tussenklasse ertussen (bijv. `ElektrischMedia : Media, IOplaadbaar`), zodat de gedeelde code maar op één plek staat.
+- Custom exception tekenen: erft van `Exception` + gestippelde `«throws»`-pijl vanaf de klasse die hem gooit.
+- Singleton tekenen: zie §29.
+
+---
+
+## 29. Singleton, IReadOnlyList, ReferenceEquals
+
+### Singleton (creational pattern)
+
+**Probleem:** er mag in het hele programma maar **één** object van een klasse bestaan (één centrale administratie, één configuratie).
+**Oplossing:** constructor `private` maken + één `static` instantie die je via een `static` property opvraagt.
+
+```csharp
+public sealed class Bibliotheek                       // sealed: niemand kan ervan erven
+{
+    private static Bibliotheek? _instance;            // 1. static field: de ENIGE instantie
+
+    public static Bibliotheek Instance                // 2. static property: toegang
+    {
+        get
+        {
+            if (_instance == null)                    //    nog niet gemaakt? maak hem dan
+                _instance = new Bibliotheek();
+            return _instance;                         //    anders: geef de bestaande terug
+        }
+    }
+    // Korte versie: public static Bibliotheek Instance => _instance ??= new Bibliotheek();
+
+    private Bibliotheek() { }                         // 3. PRIVATE constructor: new van buiten kan niet
+
+    // ... gewone (niet-static) members:
+    private readonly List<Media> _media = new();
+    public void VoegToe(Media m) => _media.Add(m);
+}
+```
+
+Gebruik:
+```csharp
+var b1 = Bibliotheek.Instance;          // via de classnaam (static), NIET met new
+var b2 = Bibliotheek.Instance;
+Console.WriteLine(ReferenceEquals(b1, b2));   // True → hetzelfde object
+// var b3 = new Bibliotheek();          ❌ compileerfout: constructor is private
+```
+
+De drie kenmerken (onthouden voor de toets):
+1. **private constructor** → niemand anders kan `new` doen
+2. **private static field** met de enige instantie
+3. **public static property** (`Instance`) die de instantie teruggeeft (en hem de eerste keer maakt = *lazy*)
+
+Thread-safe variant (optioneel, als het gevraagd wordt):
+```csharp
+private static readonly Lazy<Bibliotheek> _lazy = new(() => new Bibliotheek());
+public static Bibliotheek Instance => _lazy.Value;
+```
+
+**In UML:**
+```
+┌────────────────────────────────────┐
+│     «singleton» Bibliotheek        │
+├────────────────────────────────────┤
+│ - _instance: Bibliotheek           │   ← onderstreept (static)
+│ - _media: List<Media>              │
+├────────────────────────────────────┤
+│ - Bibliotheek()                    │   ← private constructor
+│ + Instance: Bibliotheek {get}      │   ← onderstreept (static)
+│ + VoegToe(m: Media): void          │
+└────────────────────────────────────┘
+```
+
+### ReferenceEquals
+
+```csharp
+ReferenceEquals(a, b)    // true als a en b naar HETZELFDE object wijzen (zie §5)
+object.ReferenceEquals(a, b)   // zelfde, volledige schrijfwijze
+```
+
+### Lijst veilig naar buiten aanbieden: IReadOnlyList
+
+```csharp
+private readonly List<Media> _media = new();          // intern: aanpasbaar
+public IReadOnlyList<Media> Media => _media;          // extern: alleen lezen (upcasting!)
+
+// Van buiten:
+foreach (var m in bieb.Media) Console.WriteLine(m);   // ✅ lezen
+var eerste = bieb.Media[0];                           // ✅ index
+int n = bieb.Media.Count;                             // ✅
+// bieb.Media.Add(...)                                ❌ bestaat niet op IReadOnlyList
+```
+Waarom: encapsulation. Toevoegen kan alleen via `VoegToe(...)`, waar je kunt valideren en loggen.
+
+### Handige stukjes voor een "beheer"-klasse
+
+```csharp
+// Zoeken op id
+var item = _media.FirstOrDefault(m => m.Id == id);
+if (item == null)
+    throw new MediaNietBeschikbaarException(id, $"Media {id} bestaat niet");
+
+// Checken of een object een interface implementeert + meteen casten
+if (item is IOplaadbaar o && o.AccuPercentage < 20) { ... }
+
+// Alle objecten die een interface implementeren (upcasting via interface)
+List<IOplaadbaar> oplaadbaar = _media.OfType<IOplaadbaar>().ToList();
+foreach (var o in oplaadbaar) o.LaadOp();
+
+// Logger als property (property injection, DIP): later andere logger inpluggen
+public ILogger Logger { get; set; } = new ConsoleLogger();
+
+// Loggen VOOR het gooien van de exception
+Logger.Fout($"Weigering: {id} niet beschikbaar");
+throw new MediaNietBeschikbaarException(id, "...");
+```
+
+### Geld en prijzen
+
+```csharp
+public override decimal BerekenPrijs(int minuten) => 1.00m + 0.25m * minuten;   // m = decimal!
+Console.WriteLine($"{prijs:C}");    // € 6,00
+```
+
+---
+
+## 30. Stappenplan casus-toets
+
+### Casus lezen → vertalen naar OOP
+
+| Zin in de casus | Betekent |
+|---|---|
+| "Alle X hebben..." | properties in de (abstracte) **basisklasse** |
+| "Elk soort X berekent ... **anders**" | **abstracte methode** + `override` per subklasse |
+| "Sommige X kunnen ..." (opladen, reserveren) | **interface** |
+| "Twee subklassen hebben dezelfde code" | extra **abstracte tussenklasse** |
+| "mag alleen als ... / moet tussen 0 en 100" | **validatie** in setter of methode + exception |
+| "gooit een ...Exception met een duidelijke melding" | **custom exception** (`: Exception`, `: base(melding)`) |
+| "Er mag maar **één** ... bestaan" | **Singleton** (§29) |
+| "later ook naar bestand **zonder aanpassingen**" | **interface + DIP** (§19), bijv. `ILogger` |
+| "één centrale administratie / beheert alle ..." | klasse met `private List<T>` + `IReadOnlyList<T>` |
+| "alle oplaadbare ... tegelijk" | `OfType<IInterface>()` + foreach |
+| "achteraf nagaan wat er gebeurd is" | **logging** (Info bij succes, Fout bij weigering) |
+| "kies tussen gedrag tijdens runtime" | Strategy |
+| "maak het juiste object op basis van ..." | Factory |
+| "anderen moeten op de hoogte worden gebracht" | Observer |
+| "bestaande klasse past niet" | Adapter |
+
+### Volgorde van bouwen
+
+1. **Abstracte basisklasse**: properties, `protected` constructor (met validatie → `ArgumentException`), abstracte methode, `override ToString()`.
+2. **Interfaces** (klein: alleen signatures).
+3. **Subklassen**: `: base(...)`, `override` abstracte methode, `override ToString()` met `base.ToString()`, interface-members `public` implementeren, validatie in setters.
+4. **Custom exception**: `: Exception`, constructor met id + melding → `: base(melding)`, id in property.
+5. **Logger**: `ILogger` + `ConsoleLogger` (prefix `[INFO]` / `[FOUT]`).
+6. **Beheerklasse** (Singleton): `Instance`, `private List<T>`, `IReadOnlyList<T>`, methodes met logging + exceptions.
+7. **Program.cs**: demo stap voor stap, elke stap met `Console.WriteLine` zodat het zichtbaar is.
+
+### Template Program.cs-demo
+
+```csharp
+var b1 = Bibliotheek.Instance;
+var b2 = Bibliotheek.Instance;
+Console.WriteLine($"Zelfde object: {ReferenceEquals(b1, b2)}");
+
+b1.VoegToe(new Boek("B1", "Titel", "Auteur"));
+
+try
+{
+    b1.Leen("B1");
+    b1.Leen("B1");      // tweede keer → exception
+}
+catch (MediaNietBeschikbaarException ex)
+{
+    Console.WriteLine($"Melding aan klant: {ex.Message}");
+}
+
+foreach (var m in b1.Media)
+    Console.WriteLine(m);   // laat overschreven ToString() zien
+```
+
+### Checklist voor inleveren
+
+- [ ] Klassendiagram: zichtbaarheid `+ - #`, types, «abstract»/«interface», juiste pijlen (dicht = erft, gestippeld = implementeert), multipliciteit
+- [ ] Elke klasse/interface in een eigen bestand, juiste `namespace`
+- [ ] `abstract` + `override` gebruikt (niet `new`)
+- [ ] `decimal` voor geld, met `m`
+- [ ] Validatie met de juiste exception (`ArgumentException`, `ArgumentOutOfRangeException`)
+- [ ] Custom exception gooien + in demo afvangen met try/catch
+- [ ] Logging alleen via de interface
+- [ ] Singleton: private constructor, static Instance, ReferenceEquals in demo
+- [ ] Demo toont **alle** gevraagde punten met verwachte output
+- [ ] Lukt iets niet? **Schrijf als commentaar wat je had willen doen** (telt ook mee)
+
+### Tijd (bij 60 min)
+
+| Onderdeel | Tijd |
+|---|---|
+| Casus lezen + UML | 10 min |
+| Implementatie | 40 min |
+| Demo | 10 min |
+
+Liever een werkend geheel met kleine gaten dan één perfect onderdeel. Compileer **tussendoor** (na elke klasse) zodat fouten niet opstapelen.
